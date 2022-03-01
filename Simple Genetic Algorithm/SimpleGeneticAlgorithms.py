@@ -5,7 +5,7 @@ from typing import List
 
 #A gene object in population
 class Gene(object):
-    def __init__(self, bitGene) -> None:
+    def __init__(self, bitGene: List[str]) -> None:
         self.bitGene = bitGene
         self.eval = None
         
@@ -107,12 +107,11 @@ if __name__ == '__main__':
     g.printResult()
 
     #Reproduction
-    for i in range(10000):
+    for i in range(100000):
         g.crossover()
         g.mutation()
         g.evaluate(i+2)
         print('Loop:', i+2)
         g.printResult()
-    
 
-    # g.printResult()
+    g.printResult()
