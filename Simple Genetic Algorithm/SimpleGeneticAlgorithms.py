@@ -12,7 +12,7 @@ class Gene(object):
 
 #Generation object
 class Generation(object):
-    #Initialize
+    # Initialize
     def __init__(self, popSize: int, pc: float, pm: float, decimalPoints: int, searchSpace: List[float]) -> None:
         self.popSize = popSize
         self.pc = pc
@@ -43,7 +43,8 @@ class Generation(object):
             gene.eval = round(21.5 + x * math.sin(4 * math.pi * x) + y * math.sin(20 * math.pi * y), self.decimalPoints)
             totalFitness += gene.eval
             if gene.eval > self.maxEval[0]: self.maxEval = [gene.eval, loop]
-            if totalFitness > self.maxTotalFitness: self.maxTotalFitness = totalFitness
+        
+        if totalFitness > self.maxTotalFitness: self.maxTotalFitness = totalFitness
 
         # Select the gene of new generation
         p = 0.0
