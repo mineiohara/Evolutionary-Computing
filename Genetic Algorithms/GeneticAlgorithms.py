@@ -94,21 +94,24 @@ class Generation(object):
                         isCrossover[j] = False
                         child = []
                         for k in range(self.dimention):
-                            child.append(round(self.population[i].realValuedGene[k] * self.a + self.a * self.population[j].realValuedGene[k], 6))
+                            child.append(self.population[i].realValuedGene[k] * self.a + self.a * self.population[j].realValuedGene[k])
                         
-                        self.population[i].realValuedGene, self.population[j].realValuedGene = child, child
+                        # self.population[i].realValuedGene, self.population[j].realValuedGene = child, child
+                        self.population.append(Gene(child))
+                        self.population.append(Gene(child))
 
     # Tournament selection
     def selection(self) -> None:
         oldGen = self.population
+        self.population = []
         for i in range(self.popSize):
-            rand1 = random.randint(0,self.popSize - 1)
-            rand2 = random.randint(0,self.popSize - 1)
+            rand1 = random.randint(0, len(oldGen) - 1)
+            rand2 = random.randint(0, len(oldGen) - 1)
 
             if abs(oldGen[rand1].eval) < abs(oldGen[rand2].eval):
-                self.population[i] = oldGen[rand1]
+                self.population.append(oldGen[rand1])
             else: 
-                self.population[i] = oldGen[rand2]
+                self.population.append(oldGen[rand2])
         
         del oldGen
 
@@ -116,7 +119,7 @@ class Generation(object):
 
 if __name__=='__main__':
     #Set parameters
-    popSize = 40
+    popSize = 20
     dimention = 30
     searchSpace = [-10, 10]
 
@@ -159,6 +162,7 @@ if __name__=='__main__':
             g.griewank()
             g.selection()
         
+        print("Good!", end=" ") if g.minEval[1] < 0.01 else print("Bad", end=" ")
         print("Optimum value: {0} at generation {1}".format(g.minEval[1], g.minEval[0]))
         wb = openpyxl.load_workbook('./data2.xlsx')
         sheet = wb['Sheet1']
