@@ -29,10 +29,9 @@ class Generation(object):
 
     # Evaluation function
     def schewefel(self) -> None:
-        sum = 0
-        product = 1
-
         for gene in self.population:
+            sum = 0
+            product = 1
             for i in range(self.dimention):
                 # print(gene.realValuedGene)
                 sum += gene.realValuedGene[i]
@@ -128,6 +127,7 @@ if __name__=='__main__':
         sheet = wb['Sheet1']
         sheet.cell(row=m+1, column=1).value = m+1
         sheet.cell(row=m+1, column=2).value = g.minEval[1]*100
+        sheet.cell(row=m+1, column=3).value = g.minEval[0]
         wb.save('./data.xlsx')
         wb.close()
         del g
