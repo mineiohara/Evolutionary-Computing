@@ -1,5 +1,5 @@
 import random
-from re import M
+import math
 from typing import List
 
 import openpyxl
@@ -27,7 +27,7 @@ class Generation(object):
         self.minEval = [0, 100000000000000]
         self.maxTotalFitness = 0
 
-    # Evaluation function
+    # Evaluation function 1
     def schewefel(self) -> None:
         for gene in self.population:
             sum = 0
@@ -44,6 +44,19 @@ class Generation(object):
 
         # print("Processing: {0} times, Min eval: {1} at generation {2}".format(self.currentGeneration, self.minEval[1], self.minEval[0]))
 
+    # Evaluation function 2
+    def griewank(self) -> None:
+        for gene in self.population:
+            sum = 0
+            product = 1
+            for i in range(self.dimention):
+                sum += gene.realValuedGene[i]**2
+                product *= math.cos(gene.realValuedGene[i]/math.sqrt(i+1)) + 1
+            gene.eval = 1/4000*sum - product
+            if abs(gene.eval) < abs(self.minEval[1]):
+                self.minEval[0] = self.currentGeneration
+                self.minEval[1] = gene.eval
+
     # Print out the result
     def printer(self) -> None:
         for gene in self.population:
@@ -58,12 +71,13 @@ class Generation(object):
                 if random.randint(0,1): 
                     for i in range(self.dimention):
                         gene.realValuedGene[i] -= (gene.realValuedGene[i] - self.searchSpace[1]) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
+                        # gene.realValuedGene[i] = round(gene.realValuedGene[i], 6)
                         # print("LB")
 
                 else:
                     for i in range(self.dimention):
                         gene.realValuedGene[i] += (self.searchSpace[0] - gene.realValuedGene[i]) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
-                        gene.realValuedGene[i] = round(gene.realValuedGene[i], 6)
+                        # gene.realValuedGene[i] = round(gene.realValuedGene[i], 6)
                     # print("UB")
 
     # Whole arithmetic crossover
@@ -102,7 +116,7 @@ class Generation(object):
 
 if __name__=='__main__':
     #Set parameters
-    popSize = 20
+    popSize = 40
     dimention = 30
     searchSpace = [-10, 10]
 
@@ -113,23 +127,44 @@ if __name__=='__main__':
     maxGeneration = 200000
     b = 5
 
+    # for m in range(100):
+    #     g = Generation(popSize, dimention, pc, a, pm, b, maxGeneration, searchSpace)
+    #     for i in range(g.maxGeneration):
+    #         g.currentGeneration = i+1
+    #         g.crossover()
+    #         g.mutation()
+    #         g.schewefel()
+    #         g.selection()
+        
+    #     print("Optimum value: {0} at generation {1}".format(g.minEval[1], g.minEval[0]))
+    #     wb = openpyxl.load_workbook('./data.xlsx')
+    #     sheet = wb['Sheet1']
+    #     sheet.cell(row=m+1, column=1).value = m+1
+    #     sheet.cell(row=m+1, column=2).value = g.minEval[1]*100
+    #     sheet.cell(row=m+1, column=3).value = g.minEval[0]
+    #     wb.save('./data.xlsx')
+    #     wb.close()
+    #     del g
+
+    
+
+    searchSpace = [-600, 600]
+
     for m in range(100):
         g = Generation(popSize, dimention, pc, a, pm, b, maxGeneration, searchSpace)
         for i in range(g.maxGeneration):
             g.currentGeneration = i+1
             g.crossover()
             g.mutation()
-            g.schewefel()
+            g.griewank()
             g.selection()
         
         print("Optimum value: {0} at generation {1}".format(g.minEval[1], g.minEval[0]))
-        wb = openpyxl.load_workbook('./data.xlsx')
+        wb = openpyxl.load_workbook('./data2.xlsx')
         sheet = wb['Sheet1']
         sheet.cell(row=m+1, column=1).value = m+1
         sheet.cell(row=m+1, column=2).value = g.minEval[1]*100
         sheet.cell(row=m+1, column=3).value = g.minEval[0]
-        wb.save('./data.xlsx')
+        wb.save('./data2.xlsx')
         wb.close()
         del g
-
-
