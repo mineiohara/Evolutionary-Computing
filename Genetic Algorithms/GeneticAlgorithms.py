@@ -6,7 +6,7 @@ import openpyxl
 
 
 class Gene(object):
-    def __init__(self, realValuedGene: float) -> None:
+    def __init__(self, realValuedGene: List[float]) -> None:
         self.realValuedGene = realValuedGene
         self.eval = None
 
@@ -23,7 +23,7 @@ class Generation(object):
         self.currentGeneration = 0
         self.maxGeneration = maxGeneration
         self.searchSpace = searchSpace
-        self.population = [ Gene(random.randrange(searchSpace[0], searchSpace[1])) for _ in range(popSize) ]
+        self.population = [ Gene([random.randrange(searchSpace[0], searchSpace[1]) for _ in range(dimention)]) for _ in range(popSize) ]
         self.minEval = [0, 100000000000000]
         self.maxTotalFitness = 0
 
@@ -35,12 +35,13 @@ class Generation(object):
         for gene in self.population:
             for i in range(self.dimention):
                 # print(gene.realValuedGene)
-                sum += gene.realValuedGene
-                product *= gene.realValuedGene
-            gene.eval = round(sum + product, 6)
+                sum += gene.realValuedGene[i]
+                product *= gene.realValuedGene[i]
+            gene.eval = sum + product
             if abs(gene.eval) < abs(self.minEval[1]):
                 self.minEval[0] = self.currentGeneration
                 self.minEval[1] = gene.eval
+                # print(gene.realValuedGene)
 
         # print("Processing: {0} times, Min eval: {1} at generation {2}".format(self.currentGeneration, self.minEval[1], self.minEval[0]))
 
@@ -56,11 +57,14 @@ class Generation(object):
         for gene in self.population:
             if random.random() < self.pm:
                 if random.randint(0,1): 
-                    gene.realValuedGene -= (gene.realValuedGene - searchSpace[1]) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
-                    # print("LB")
+                    for i in range(self.dimention):
+                        gene.realValuedGene[i] -= (gene.realValuedGene[i] - self.searchSpace[1]) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
+                        # print("LB")
 
                 else:
-                    gene.realValuedGene += (searchSpace[0] - gene.realValuedGene) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
+                    for i in range(self.dimention):
+                        gene.realValuedGene[i] += (self.searchSpace[0] - gene.realValuedGene[i]) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
+                        gene.realValuedGene[i] = round(gene.realValuedGene[i], 6)
                     # print("UB")
 
     # Whole arithmetic crossover
@@ -75,10 +79,11 @@ class Generation(object):
                 for j in range(i+1, self.popSize):
                     if isCrossover[j]:
                         isCrossover[j] = False
-                        # print("Parent1: {0}, Parent2: {1}".format(self.population[i].realValuedGene, self.population[j].realValuedGene))
-                        child = self.population[i].realValuedGene * self.a + self.a * self.population[j].realValuedGene
+                        child = []
+                        for k in range(self.dimention):
+                            child.append(round(self.population[i].realValuedGene[k] * self.a + self.a * self.population[j].realValuedGene[k], 6))
+                        
                         self.population[i].realValuedGene, self.population[j].realValuedGene = child, child
-                        # print("Child: {0}".format(child))
 
     # Tournament selection
     def selection(self) -> None:
@@ -108,8 +113,6 @@ if __name__=='__main__':
     pm = 0.01
     maxGeneration = 200000
     b = 5
-
-    g = Generation(popSize, dimention, pc, a, pm, b, maxGeneration, searchSpace)
 
     for m in range(100):
         g = Generation(popSize, dimention, pc, a, pm, b, maxGeneration, searchSpace)
