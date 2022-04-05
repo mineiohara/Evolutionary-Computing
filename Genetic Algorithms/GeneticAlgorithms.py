@@ -23,7 +23,7 @@ class Generation(object):
         self.maxGeneration = maxGeneration
         self.searchSpace = searchSpace
         self.decimalPoints = decimalPoints
-        self.population = [ Gene([random.randrange(searchSpace[0], searchSpace[1]) for _ in range(dimention)]) for _ in range(popSize) ]
+        self.population = [ Gene([round(random.random()*(searchSpace[1] - searchSpace[0])+ searchSpace[0], decimalPoints) for _ in range(dimention)]) for _ in range(popSize) ]
         self.minEval = [0, 100000000000000]
 
     # Evaluation function 1
@@ -32,8 +32,8 @@ class Generation(object):
             sum = 0
             product = 1
             for i in range(self.dimention):
-                sum += gene.realValuedGene[i]
-                product *= gene.realValuedGene[i]
+                sum += abs(gene.realValuedGene[i])
+                product *= abs(gene.realValuedGene[i])
             gene.eval = sum + product
             if abs(gene.eval) < abs(self.minEval[1]):
                 self.minEval[0] = self.currentGeneration
@@ -46,13 +46,11 @@ class Generation(object):
             product = 1
             for i in range(self.dimention):
                 sum += gene.realValuedGene[i]**2
-                product *= math.cos(gene.realValuedGene[i]/math.sqrt(i+1)) + 1
-            gene.eval = 1/4000*sum - product
+                product *= math.cos(gene.realValuedGene[i]/math.sqrt(i+1))
+            gene.eval = 1/4000*sum - product + 1
             if abs(gene.eval) < abs(self.minEval[1]):
                 self.minEval[0] = self.currentGeneration
                 self.minEval[1] = gene.eval
-            if self.minEval[1] == 0:
-                print("Find a optimum value at generation {0}".format(self.minEval[0]))
 
     # Non-uniform mutation
     def mutation(self) -> None:
@@ -60,13 +58,13 @@ class Generation(object):
             if random.random() < self.pm:
                 if random.randint(0,1):
                     for i in range(self.dimention):
-                        gene.realValuedGene[i] -= (gene.realValuedGene[i] - self.searchSpace[1]) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
-                        gene.realValuedGene[i] = round(gene.realValuedGene[i], 4)
+                        gene.realValuedGene[i] -= (gene.realValuedGene[i] - self.searchSpace[0]) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
+                    gene.realValuedGene[i] = round(gene.realValuedGene[i], self.decimalPoints)
 
                 else:
                     for i in range(self.dimention):
-                        gene.realValuedGene[i] += (self.searchSpace[0] - gene.realValuedGene[i]) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
-                        gene.realValuedGene[i] = round(gene.realValuedGene[i], self.decimalPoints)
+                        gene.realValuedGene[i] += (self.searchSpace[1] - gene.realValuedGene[i]) * (1 - (random.random() ** ((1 - self.currentGeneration/self.maxGeneration) ** self.b)))
+                    gene.realValuedGene[i] = round(gene.realValuedGene[i], self.decimalPoints)
 
     # Whole arithmetic crossover
     def crossover(self) -> None:
@@ -112,54 +110,56 @@ if __name__=='__main__':
     searchSpace = [-10, 10]
     pc = 0.25
     a = 0.5
-    pm = 0.01
+    pm = 0.4
     maxGeneration = 200000
     b = 5
-    decimalPoints = 4
+    decimalPoints = 9
     acceptance = 0.01
 
     # For evaluation function 1
-    # for m in range(100):
-    #     g = Generation(popSize, dimention, pc, a, pm, b, maxGeneration, searchSpace, decimalPoints)
-    #     for i in range(g.maxGeneration):
-    #         g.currentGeneration = i+1
-    #         g.crossover()
-    #         g.mutation()
-    #         g.schewefel()
-    #         g.selection()
+    for m in range(100):
+        g = Generation(popSize, dimention, pc, a, pm, b, maxGeneration, searchSpace, decimalPoints)
+        for i in range(g.maxGeneration):
+            g.currentGeneration = i+1
+            g.crossover()
+            g.mutation()
+            g.schewefel()
+            g.selection()
         
-    #     print("Optimum value: {0} at generation {1}".format(g.minEval[1], g.minEval[0]))
-    #     wb = openpyxl.load_workbook('./data.xlsx')
-    #     sheet = wb['Sheet1']
-    #     sheet.cell(row=m+1, column=1).value = m+1
-    #     if g.minvalue[1] != 0: sheet.cell(row=m+1, column=2).number_format = '0.000000000'
-    #     sheet.cell(row=m+1, column=2).value = g.minEval[1]*100
-    #     sheet.cell(row=m+1, column=3).value = g.minEval[0]
-    #     wb.save('./data.xlsx')
-    #     wb.close()
-    #     del g
+        print("Optimum value: {0} at generation {1}".format(g.minEval[1], g.minEval[0]))
+        wb = openpyxl.load_workbook('./data.xlsx')
+        sheet = wb['Sheet1']
+        sheet.cell(row=m+1, column=1).value = m+1
+        if g.minvalue[1] != 0: sheet.cell(row=m+1, column=2).number_format = '0.000000000'
+        sheet.cell(row=m+1, column=2).value = g.minEval[1]*100
+        sheet.cell(row=m+1, column=3).value = g.minEval[0]
+        wb.save('./data.xlsx')
+        wb.close()
+        del g
 
     
     # For evaluation function 2
+    pm = 1
     searchSpace = [-600, 600]
 
-    # for m in range(100):
-    #     g = Generation(popSize, dimention, pc, a, pm, b, maxGeneration, searchSpace, decimalPoints)
-    #     for i in range(g.maxGeneration):
-    #         g.currentGeneration = i+1
-    #         g.crossover()
-    #         g.mutation()
-    #         g.griewank()
-    #         g.selection()
+    for m in range(100):
+        g = Generation(popSize, dimention, pc, a, pm, b, maxGeneration, searchSpace, decimalPoints)
+        for i in range(g.maxGeneration):
+            g.currentGeneration = i+1
+            g.crossover()
+            g.mutation()
+            g.griewank()
+            g.selection()
+            if g.minEval[1] == 0: break
         
-    #     print("Good!", end=" ") if g.minEval[1] < acceptance else print("Bad!", end=" ")
-    #     print("Optimum value: {0} at generation {1}".format(g.minEval[1], g.minEval[0]))
-    #     wb = openpyxl.load_workbook('./data2.xlsx')
-    #     sheet = wb['Sheet1']
-    #     sheet.cell(row=m+1, column=1).value = m+1
-    #     if g.minvalue[1] != 0: sheet.cell(row=m+1, column=2).number_format = '0.000000000'
-    #     sheet.cell(row=m+1, column=2).value = g.minEval[1]
-    #     sheet.cell(row=m+1, column=3).value = g.minEval[0]
-    #     wb.save('./data2.xlsx')
-    #     wb.close()
-    #     del g
+        print("Good!", end=" ") if g.minEval[1] < acceptance else print("Bad!", end=" ")
+        print("Optimum value: {0} at generation {1}".format(g.minEval[1], g.minEval[0]))
+        wb = openpyxl.load_workbook('./data2.xlsx')
+        sheet = wb['Sheet1']
+        sheet.cell(row=m+1, column=1).value = m+1
+        if g.minEval[1] != 0: sheet.cell(row=m+1, column=2).number_format = '0.000000000'
+        sheet.cell(row=m+1, column=2).value = g.minEval[1]
+        sheet.cell(row=m+1, column=3).value = g.minEval[0]
+        wb.save('./data2.xlsx')
+        wb.close()
+        del g
